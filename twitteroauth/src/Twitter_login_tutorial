@@ -1,0 +1,94 @@
+create app on twitter
+
+To create and register new app on twitter, go to https://apps.twitter.com/ and click on create new app.
+
+
+
+For testing purpose, if you are developing app on localhost,provide website url as "http://127.0.0.1/{your-websitename}" otherwise provide the url and callback url as callback page followed by website url
+
+login with twitter
+Now app is created on twitter.To integrate the twitter login in our site download the twiiter api php client from https://github.com/abraham/twitteroauth .
+
+In this tutorial callback url is login.php 
+
+login.php
+<?php
+require_once 'twitteroauth/autoload.php';
+
+use twitter_login\twitteroauth\TwitterOAuth;
+session_start();
+
+// The TwitterOAuth instance
+$twitteroauth = new TwitterOAuth('APP_ID', 'APP_SECRET');
+
+// Requesting authentication tokens, the parameter is the URL we will be redirected to
+//$request_token = $twitteroauth->getRequestToken('http://localhost.com/twitter_login/twitter_oauth.php');
+
+ $request_token = $twitteroauth->oauth('oauth/request_token', array('oauth_callback' => 'http://127.0.0.1/twitter_login/twitter_oauth.php'));
+
+// Saving them into the session
+$_SESSION['oauth_token'] = $request_token['oauth_token'];
+$_SESSION['oauth_token_secret'] = $request_token['oauth_token_secret'];
+ 
+// If everything goes well..
+if($_SESSION['oauth_token']){
+    // Let's generate the URL and redirect
+   // $url = $twitteroauth->getAuthorizeURL($request_token['oauth_token']);
+	$url = $twitteroauth->url('oauth/authorize', array('oauth_token' => $request_token['oauth_token']));
+    header('Location: '. $url);
+}
+ else {
+    // It's a bad idea to kill the script, but we've got to know when there's an error.
+    die('Something wrong happened.');
+}
+
+?>
+
+
+twitter_oauth.php
+
+<?php
+require_once 'twitteroauth/autoload.php';
+
+use twitter_login\twitteroauth\TwitterOAuth;
+session_start();
+
+if(!empty($_GET['oauth_verifier']) && !empty($_SESSION['oauth_token']) && !empty($_SESSION['oauth_token_secret'])){
+    // We've got everything we need
+} else {
+    // Something's missing, go back to square 1
+    header('Location: login.php');
+}
+
+// TwitterOAuth instance, with two new parameters we got in twitter_login.php
+$twitteroauth = new TwitterOAuth('APP_ID', 'APP_SECRET', $_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+
+// Let's request the access token
+ 	$access_token = $twitteroauth->oauth("oauth/access_token", array("oauth_verifier" => $_REQUEST['oauth_verifier']));
+// Save it in a session var
+ 
+$_SESSION['access_token'] = $access_token;
+
+//To get user info create new instance with access_token  
+$twitteroauth=new TwitterOAuth('APP_ID','APP_SECRET',$access_token['oauth_token'],$access_token['oauth_token_secret']);
+
+// Let's get the user's info
+$user_info = $twitteroauth->get('account/verify_credentials');
+
+//Display userdata
+echo '<div style="text-align:center">';
+echo '<img src="'.$user_info->profile_image_url.'" width="50px" height="50px"><br>';
+echo "Name: ".$user_info->name."<br>";
+echo "Username: ".$user_info->screen_name."<br>";
+echo "Twitter_id: ".$user_info->id."<br>";
+echo "Location: ".$user_info->location."<br>";
+echo "Created at: ".$user_info->created_at."<br>";
+
+
+
+Note:Add following code for curl settings to request method in TwitterOAuth class if it does not exist.
+			CURLOPT_SSL_VERIFYHOST => false,
+            CURLOPT_SSL_VERIFYPEER => false,
+
+
+?>
