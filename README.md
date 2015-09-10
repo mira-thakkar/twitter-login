@@ -1,7 +1,7 @@
 # twitter-login
 Login With twiiter api
 
-To create and register new app on twitter, go to https://apps.twitter.com and click on create new app.
+To create and register new app on twitter, go to <a href="https://apps.twitter.com">Twitter Apps</a> and click on create new app.
 
 For testing purpose, if you are developing app on localhost,provide website url as “http://127.0.0.1/{your-websitename}” otherwise provide the website url and callback url as callback page followed by website url
 login with twitter
